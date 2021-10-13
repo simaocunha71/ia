@@ -10,7 +10,7 @@ Como carregar este ficheiro para o SwiProlog?
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado filho: Filho,Pai -> {V,F}
 
-filho( F,P ) :- pai( P,F ).
+% Esta linha por algum motivo entra em conflito com a linha 25 -> filho( F,P ) :- pai( P,F ).
 /*alinea i*/   
 filho( joao,jose ).
 /*alinea ii*/  
@@ -31,20 +31,20 @@ pai( paulo,maria).
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado avo: Avo,Neto -> {V,F}
 
-/*alinea vi*/   
-avo( antonio, nadia).
 /*alinea xiii*/ 
-avo( A,N ) :- filho( N,X ), pai( A,X ).
+avo( A,N ) :- filho( P,A ), filho(N,P).
 /*alinea xvii*/ 
 avo( A,N ) :- descendente( N,A,2 ).
+/*alinea vi*/   
+avo( antonio, nadia).
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado avo: Neto,Avo -> {V,F}
 
 /*alinea xiv*/ 
-neto(N,A) :- avo( A,N ).
+neto(N,A) :- filho(N,P),filho(P,A).
 /*alinea vii*/ 
-neto( nuno, ana).
+neto(nuno,ana).
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado masculino
@@ -72,16 +72,14 @@ bisavo( A,D ) :- descendente( D,A,3 ).
 % Extensao do predicado descendente: Descendente,Ascendente -> {V,F}
 
 /*alinea xv*/ 
-descendente( D,A ) :- filho( D,A ).
-descendente( D,A ) :- filho( D,X ), descendente( X,A ).
-
+descendente( D,A ) :- filho( D,A );	filho( D, X), descendente(X,A).
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado descendente: Descendente,Ascendente,Grau -> {V,F}
 
-descendente( D,A,1 ) :- filho( D,A ).
 /*alinea xvi*/ 
-descendente( D,A,G ) :- filho( D,X), descendente( X,A,N ), G is N+1.
+descendente( D,A,1) :- filho(D,A).	%	caso de paragem
+descendente(D, A, G) :- filho(D, X), descendente(X, A, N), G is N+1.
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 /*alinea xix*/ 
 trisavo( X,Y ) :- descendente( Y,X,4 ).
@@ -89,4 +87,55 @@ trisavo( X,Y ) :- descendente( Y,X,4 ).
 tetraneto( X,Y ) :- descendente( X,Y,5 ).
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
-/*alinea xxi*/ 
+/*
+As formulas lógicas aqui criadas são para testar com o swipl 
+
+-alinea xxi 
+filho( joao,jose ).
+
+-alinea xxii
+pai(jose,joao).
+
+-alinea xxiii
+masculino(joao).
+
+-alinea xxiv
+feminino(jose).
+
+-alinea xxv
+filho(_,jose).
+
+-alinea xxvi
+filho(jose,joao).
+
+-alinea xxvii
+avo(manuel,jose).
+
+-alinea xxviii
+avo(manuel,joao).
+
+-alinea xxix
+neto(carlos,_).
+
+-alinea xxx
+descendente(joao,manuel,_).
+
+-alinea xxxi
+filho(X,jose), descendente(X,manuel,_).
+
+-alinea xxxii
+descendente(X,manuel), filho(X,jose).
+
+-alinea xxxiii
+descendente(joao,jose,X).
+
+-alinea xxxiv
+descendente(joao,jose,2).
+
+-alinea xxxv
+descendente(joao,manuel,X).
+
+-alinea xxxvi
+descendente(joao,manuel,X), X>2.
+
+*/
