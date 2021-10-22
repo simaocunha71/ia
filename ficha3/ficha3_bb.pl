@@ -26,24 +26,23 @@ comprimento( [_|L],N ) :-
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado quantos: Lista,Comprimento -> {V,F}
-/*alinea iii*/
+/*alinea iii (erro)*/
 
-quantos([],0).
+quantos([_],1).
 quantos([H|T],N) :-
     pertence(H,H|T),
     quantos(T,N).
 quantos([H|T], N1) :-
     nao(pertence(H,H|T)),
     quantos(T,N),
-    N1 is N+1;
+    N1 is N+1.
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado apagar: Elemento,Lista,Resultado -> {V,F}
 /*alinea iv*/
-apagar( X,[X|R],R).
-apagar( X,[Y|R],[Y|L]) :-
-    X \= Y,
-    apagar( X,R,L).
+apagar(_, [], []).
+apagar(X, [X|T], T).
+apagar(X, [H|T], [H|R]) :- apagar(X, T, R).
 
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
@@ -54,7 +53,7 @@ apagatudo(X,[X|R],L) :-
     apagatudo(X,R,L).
 apagatudo(X,[Y|R],[Y|L]) :-
     X \= Y,
-apagatudo(X,R,L).
+    apagatudo(X,R,L).
 
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
@@ -74,8 +73,6 @@ concatenar([H|T], L1, [H|R]) :-
     concatenar(T, L1, R).
 
 
-
-
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do predicado inverter: Lista,Resultado -> {V,F}
 /*alinea viii*/
@@ -83,8 +80,6 @@ inverter([], []).
 inverter([H|T], R) :-
     inverter(T, Z),
     concatenar(Z, [H], R).
-
-
 
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
@@ -100,6 +95,49 @@ sublista([H|T], [_|TS]) :-
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Extensao do meta-predicado nao: Questao -> {V,F}
 /*alinea x*/
-nao( Questao ) :-
-    Questao, !, fail.
+nao( Questao ) :- Questao, !, fail.
 nao( Questao ).
+
+/*---------------------------------*/
+/* alinea xi 
+?- pertence(b,[a,b,c]).
+true .
+*/
+
+/* alinea xii 
+?- pertence(1,[a,b,c]).
+false.
+*/
+
+/* alinea xiii 
+*/
+
+/* alinea xiv 
+?- comprimento([],X).
+X = 0.
+*/
+
+/* alinea xv 
+?- apagar(2,[a,b,c],X).
+X = [a, b, c] .
+*/
+
+/* alinea xvi 
+?- apagatudo(2,[a,b,c],X).
+X = [a, b, c] .
+*/
+
+/* alinea xvii 
+?- concatenar([1,2],[a,b,c],[1,2,a,b,c]).
+true.
+*/
+
+/* alinea xviii 
+?- sublista([2,3],[1,2,3,4,5]).
+true .
+*/
+
+/* alinea xix 
+?- sublista([3,2],[1,2,3,4,5]).
+false.*/
+
