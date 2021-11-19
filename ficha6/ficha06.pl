@@ -1,167 +1,152 @@
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
-% InteligÃªncia Artificial MIEI /3  LEI/3
+% I.A. - MiEI/3
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
 % Programacao em logica 
-% Pesquisa Informada (Ficha 6)
+% Pesquisa NÃ£o Informada e Informada (Ficha 6)
 
 %--------------------------------- - - - - - - - - - -  -  -  -  -   -
-% Base de Conhecimento
+move(a, b, 2).
+move(b, c, 2).
+move(c, d, 3).
+move(d, t, 3).
+move(e, f, 5).
+move(f, g, 2).
+move(g, t, 2).
+move(s, a, 2).
+move(s, e, 2).
 
-estimado(a, 5).
-estimado(b, 4).
-estimado(c, 4).
-estimado(d, 3).
-estimado(e, 7).
-estimado(f, 4).
-estimado(g, 2).
-estimado(s, 10).
-estimado(t, 0).
 
-aresta(s, a, 2).
-aresta(a, b, 2).
-aresta(b, c, 2).
-aresta(c, d, 3).
-aresta(d, t, 3).
-aresta(s, e, 2).
-aresta(e, f, 5).
-aresta(f, g, 2).
-aresta(g, t, 2).
+estima(s, 10).
+estima(e, 7).
+estima(a, 5).
+estima(b, 4).
+estima(c, 4).
+estima(d, 3).
+estima(f, 4).
+estima(g, 2).
+estima(t, 0).
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+goal(t).
 
-not( Questao ) :- Questao, !, fail.
-not( Questao ).
+%---------------------------------pesquisa em profundidade primeiro com custo
 
-member( X, [X|_] ).
-member( X, [_|Xs] ) :- member( X, Xs ).
+resolve_pp_c(Nodo, [Nodo|Caminho], C) :-
+    profundidadeprimeiro(Nodo, [Nodo], Caminho, C).
 
-invert( Xs, Ys ) :- invert( Xs, [], Ys ).
-invert( [], Xs, Xs ).
-invert( [X|Xs], Ys, Zs ) :- invert(Xs, [X|Ys], Zs).
 
-min( [(P,X)], (P,X) ).
-min( [(P,X)|L], (Py,Y) ) :- min( L, (Py,Y) ), X>Y.
-min( [(Px,X)|L], (Px,X) ) :- min( L, (Py,Y) ), X=<Y.
+profundidadeprimeiro(Nodo, _, [], 0) :-
+    goal(Nodo).
 
-select( E, [E|Xs], Xs ).
-select( E, [X|Xs], [X|Ys] ) :- select( E, Xs, Ys ).
+profundidadeprimeiro(Nodo, Historico, [ProxNodo|Caminho], C) :-
+    adjacente(Nodo, ProxNodo, C1),
+    nao(membro(ProxNodo, Historico)),
+    profundidadeprimeiro(ProxNodo, [ProxNodo|Historico], Caminho, C2),
+    C is C1+C2.	
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+adjacente(Nodo, ProxNodo, C) :-
+    move(Nodo, ProxNodo, C).
+adjacente(Nodo, ProxNodo, C) :-
+    move(ProxNodo, Nodo, C).
 
-aresta( Node, Next ) :- aresta( Node, Next, _ ).
+melhor(Nodo, S, Custo) :-
+    findall((SS, CC),
+            resolve_pp_c(Nodo, SS, CC),
+            L),
+    minimo(L,  (S, Custo)).
 
-start( s ).
+minimo([(P,X)],(P,X)).
+minimo([(Px,X)|L],(Py,Y)):- minimo(L,(Py,Y)), X>Y. 
+minimo([(Px,X)|L],(Px,X)):- minimo(L,(Py,Y)), X=<Y.
 
-end( t ).
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
 
-adjacente( Node, Next ) :- aresta( Node, Next, _ ).
-adjacente( Node, Next ) :- aresta( Next, Node, _ ).
+%---------------------------------pesquisa a estrela 
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+resolve_aestrela(Nodo, Caminho/Custo) :-
+	estima(Nodo, Estima),
+	aestrela([[Nodo]/0/Estima], InvCaminho/Custo/_),
+	inverso(InvCaminho, Caminho).
 
-primProf( Node, _, [] ) :- end( Node ).
+aestrela(Caminhos, Caminho) :-
+	obtem_melhor(Caminhos, Caminho),
+	Caminho = [Nodo|_]/_/_,
+	goal(Nodo).
 
-solvePrimProf( Node, [Node|Path] ) :- primProf( Node, [Node], Path ).
+aestrela(Caminhos, SolucaoCaminho) :-
+	obtem_melhor(Caminhos, MelhorCaminho),
+	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
+	expande_aestrela(MelhorCaminho, ExpCaminhos),
+	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
+    aestrela(NovoCaminhos, SolucaoCaminho).	
 
-primProf( Node, Hist, [Next|Path] ) :- adjacente( Node, Next ),
-                                       not( member( Next, Hist) ),
-                                       primProf( Next, [Next|Hist], Path ).
+obtem_melhor([Caminho], Caminho) :- !.
+obtem_melhor([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
+	Custo1 + Est1 =< Custo2 + Est2, !,
+	obtem_melhor([Caminho1/Custo1/Est1|Caminhos], MelhorCaminho). 
+obtem_melhor([_|Caminhos], MelhorCaminho) :- 
+	           obtem_melhor(Caminhos, MelhorCaminho).
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
 
-allSol( L ) :- findall( ( S, C ),
-               (solvePrimProf( s, S )),
-               length( S, Int),
-               L ).
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+expande_aestrela(Caminho, ExpCaminhos) :-
+	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
 
-prof( Dest, Dest, H, D ) :- invert( H,D ).
-prof( Source, Dest, His, C ) :- adjacente( Source, Nex ),
-                                not( member( Nex, His ) ),
-                                prof( Nex, Dest, [Nex|His], C ).
- 
-solvPPMult( NodeStart, NodeEnd, [Node|Path] ) :- prof( NodeStart, NodeEnd, [NodeStart], Path ).
+%---------------------------------pesquisa Gulosa
+resolve_gulosa(Nodo, Caminho/Custo) :-
+	estima(Nodo, Estima),
+	agulosa([[Nodo]/0/Estima], InvCaminho/Custo/_),
+	inverso(InvCaminho, Caminho).
 
-adjacenteCost( Node, Next, Cost ) :- aresta( Node, Next, Cost ).
-adjacenteCost( Node, Next, Cost ) :- aresta( Next, Node, Cost ).
+agulosa(Caminhos, Caminho) :-
+	obtem_melhor_g(Caminhos, Caminho),
+	Caminho = [Nodo|_]/_/_,
+	goal(Nodo).
 
-primProfCost( Node, _, [], 0 ) :- end(Node).
-primProfCost( Node, Hist, [Next|Path], Cost ) :- adjacenteCost( Node, Next, CostMov ),
-                                                 not( member( Next, Hist) ),
-                                                 primProfCost( Next, [Next|Hist], Path, Cost2 ),
-                                                 Cost is CostMov + Cost2.
+agulosa(Caminhos, SolucaoCaminho) :-
+	obtem_melhor_g(Caminhos, MelhorCaminho),
+	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
+	expande_gulosa(MelhorCaminho, ExpCaminhos),
+	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
+    agulosa(NovoCaminhos, SolucaoCaminho).		
 
-solvePrimProfCost( Node, [Node|Path], Cost ) :- primProfCost( Node, [Node], Path, Cost ). 
+obtem_melhor_g([Caminho], Caminho) :- !.
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+obtem_melhor_g([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
+	Est1 =< Est2, !,
+	obtem_melhor_g([Caminho1/Custo1/Est1|Caminhos], MelhorCaminho).
+	
+obtem_melhor_g([_|Caminhos], MelhorCaminho) :- 
+	obtem_melhor_g(Caminhos, MelhorCaminho).
 
-ppCostAllSol( L ) :- findall( ( S, C ),
-                     (solvePrimProfCost( s, S, C )),
-                     L ).
+expande_gulosa(Caminho, ExpCaminhos) :-
+	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).	
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
+	move(Nodo, ProxNodo, PassoCusto),
+	\+member(ProxNodo, Caminho),
+	NovoCusto is Custo + PassoCusto,
+	estima(ProxNodo, Est).
 
-best( Node, Cam, Cost ) :- findall( ( Ca, Cos ),
-                           solvePrimProfCost( Node, Ca, Cos ),
-                           L ),
-                           min( L,
-                               ( Cam, Cost ) ).
+%---------------------------------predicados auxiliares
 
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+inverso(Xs, Ys):-
+	inverso(Xs, [], Ys).
 
-getBestG( [Path], Path ) :- !.
-getBestG( [Path1/Cost1/Est1,_/Cost2/Est2|Paths], Best ) :- Est1 =< Est2,
-                                                           !,
-                                                           getBestG([Path1/Cost1/Est1|Paths], Best).
-getBestG([_|Paths], Best) :- getBestG( Paths, Best ).                                
+inverso([], Xs, Xs).
+inverso([X|Xs],Ys, Zs):-
+	inverso(Xs, [X|Ys], Zs).
 
-adjacenteG( [Nodo|Path]/Cost/_, [Next,Node|Path]/New/Est ) :- aresta( Node, Next, PassCost ),
-                                                             \+ member( Next, Path ),
-                                                             New is Cost + PassCost,
-                                                             estimado( Next, Est ).
+seleciona(E, [E|Xs], Xs).
+seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).
 
-bigGreed( Path, ExPaths ) :- findall( New,
-                                      adjacenteG( Path, New ),
-                                      ExPaths ).
+nao( Questao ) :-
+    Questao, !, fail.
+nao( Questao ).
 
-greedy( Paths, Path ) :- getBestG( Paths, Best ),
-                         select( Best, Paths, Other ),
-                         bigGreed( Best, ExPaths ),
-                         append( Other, ExPaths, NewPaths ),
-                         greedy( NewPaths, SolPath ).
+membro(X, [X|_]).
+membro(X, [_|Xs]):-
+	membro(X, Xs).		
 
-solveGreed( Node, Path/Cost ) :- estimado( Node, estimado ),
-                                 greedy( [[Node]/0/estimado], InvPath/Cost/_ ),
-                                 invert( InvPath, Path ).
-
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
-
-getBest( [Path], Path ) :- !.
-getBest( [Path1/Cost1/Est1,_/Cost2/Est2|Paths], Best ) :- Cost1 + Est1 =< Cost2 + Est2,
-                                                          !,
-                                                          getBest( [Path1/Cost1/Est1|Paths], Best ).
-getBest( [_|Paths], Best ) :- getBest( Paths, Best ).          
-
-bigStar( Path, ExPaths ) :- findall( New,
-                                     adjacenteG( Path, New ),
-                                     ExPaths ).
-
-star( Paths, Path ) :- getBest( Paths, Path ), 
-                       Path = [Node|_]/_/_, 
-                       end( Node ).
-
-star( Paths, SolPath ) :- getBest( Path, Best ),
-                          select( Best, Path, Other ),
-                          bigStar( Best, ExPaths ),
-                          append( Other, ExPaths, NewPaths ),
-                          star( NewPaths, SolPath ).
-
-solveStar( Node, Path/Cost ) :- estimado( Node, estimado ),
-                                star( [[Node]/0/estimado], InvPath/Cost/_ ),
-                                invert( InvPath, Path ).
-
-%--------------------------------- - - - - - - - - - -  -  -  -  -   -
+escrever([]).
+escrever([X|L]):- write(X), nl, escrever(L).
