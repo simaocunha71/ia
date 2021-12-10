@@ -1,6 +1,21 @@
 %jogo: identificador do jogo, arbitro, apoios de custo -> {V,F,D}
-jogo(1,aa,500).
-jogo(2,bb,xpto0123).
+:- op(900, xfy, '::').
+
+jogo(1,'Almeida Antunes',500).
+jogo(2,'Baltazar Borges',desconhecido).
+jogo(3,'Costa Carvalho', {500,2000}).
+jogo(4,'Duarte Durão', [250,750]).
+jogo(5,'Edgar Esteves', impossivel).
+%jogo(6,'Francisco França',)
+%jogo(7,'Guerra Godinho',)
+%jogo(8,'Hélder Heitor',)
+%jogo(9,'Ivo Inocêncio',)
+
++jogo(X,Arbitro,Ajudas)::(
+	findall(X,jogo(X,Arbitro,Ajudas),List),
+	length(List,L),
+	L == 1
+	).
 
 -jogo(Id,Arbitro,Ajudas):-
 	not(jogo(Id,Arbitro,Ajudas)),
@@ -19,13 +34,6 @@ excecao(jogo(4,dd,Ajudas)):-
 
 
 excecao(jogo(5,ee,_)).
-
-
-+jogo(X,Arbitro,Ajudas)::(
-	findall(X,jogo(X,Ar,Aj),List),
-	length(List,L),
-	L == 1
-	).
 
 
 si(Q,desconhecido):-
